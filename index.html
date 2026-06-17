@@ -238,7 +238,11 @@ function pitcherName(side) {
 function gameTime(g) {
   if (!g.gameDate) return "";
   const dt = new Date(g.gameDate);
-  return dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  // Always display in US Eastern time, no matter where the viewer is.
+  const t = dt.toLocaleTimeString("en-US", {
+    hour: "numeric", minute: "2-digit", timeZone: "America/New_York"
+  });
+  return `${t} ET`;
 }
 
 function renderGames(key, games) {

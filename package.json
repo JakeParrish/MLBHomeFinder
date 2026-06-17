@@ -1,0 +1,12 @@
+{
+  "name": "mlb-home-finder",
+  "version": "1.0.0",
+  "description": "A calendar site to find which MLB teams are playing at home, who they're facing, and who's pitching.",
+  "private": true,
+  "scripts": {
+    "start": "serve -s . -l ${PORT:-3000}"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
