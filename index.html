@@ -109,7 +109,44 @@
     background: var(--home-bg);
     border-color: var(--home);
   }
-  .team-name { font-weight: 600; font-size: 1.05rem; }
+  .team-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
+  .score {
+    display: inline-block;
+    min-width: 1.4em;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: #21262d;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .score.win { background: var(--accent); color: #0d1117; }
+  .live-badge {
+    color: #f85149;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #f85149; display: inline-block;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
   .badge {
     display: inline-block;
     font-size: 0.7rem;
@@ -219,7 +256,7 @@ async function selectDate(key) {
   detail.innerHTML = `<h3>${fmtPretty(key)}</h3><div class="status">Loading schedule…</div>`;
 
   try {
-    const url = `${API}?sportId=1&date=${key}&hydrate=probablePitcher,team`;
+    const url = `${API}?sportId=1&date=${key}&hydrate=probablePitcher,team,linescore`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -233,6 +270,17 @@ async function selectDate(key) {
 
 function pitcherName(side) {
   return (side.probablePitcher && side.probablePitcher.fullName) || "TBD";
+}
+
+function logoUrl(side) {
+  const id = side.team && side.team.id;
+  return id ? `https://www.mlbstatic.com/team-logos/${id}.svg` : "";
+}
+
+function scoreTag(side, hasScore) {
+  if (!hasScore) return "";
+  const winner = side.isWinner === true ? " win" : "";
+  return ` <span class="score${winner}">${side.score}</span>`;
 }
 
 function gameTime(g) {
@@ -259,24 +307,37 @@ function renderGames(key, games) {
     const home = g.teams.home;
     const away = g.teams.away;
     const status = (g.status && g.status.detailedState) || "";
+    const isLive = g.status && g.status.abstractGameState === "Live";
+    const hasScore = typeof away.score === "number" && typeof home.score === "number";
+    const ls = g.linescore || {};
+    const inning = ls.inningState && ls.currentInningOrdinal
+      ? `${ls.inningState} ${ls.currentInningOrdinal}` : "";
     html += `
       <div class="game">
         <div class="matchup">
           <div class="team">
             <span class="away-label">Away</span>
-            <span class="team-name">${away.team.name}</span>
+            <span class="team-name">
+              <img class="logo" src="${logoUrl(away)}" alt="" loading="lazy" />
+              <span>${away.team.name}</span>${scoreTag(away, hasScore)}
+            </span>
             <span class="pitcher">P: <b>${pitcherName(away)}</b></span>
           </div>
           <div class="at">@</div>
           <div class="team home">
             <span class="badge">🏠 Home</span>
-            <span class="team-name">${home.team.name}</span>
+            <span class="team-name">
+              <img class="logo" src="${logoUrl(home)}" alt="" loading="lazy" />
+              <span>${home.team.name}</span>${scoreTag(home, hasScore)}
+            </span>
             <span class="pitcher">P: <b>${pitcherName(home)}</b></span>
           </div>
         </div>
         <div class="game-meta">
           ${gameTime(g) ? `<span>🕒 ${gameTime(g)}</span>` : ""}
-          ${status ? `<span>${status}</span>` : ""}
+          ${isLive
+            ? `<span class="live-badge"><span class="live-dot"></span>LIVE${inning ? ` · ${inning}` : ""}</span>`
+            : (status ? `<span>${status}</span>` : "")}
           ${g.venue && g.venue.name ? `<span>📍 ${g.venue.name}</span>` : ""}
         </div>
       </div>`;
