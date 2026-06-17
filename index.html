@@ -122,6 +122,11 @@
     flex: 0 0 auto;
     object-fit: contain;
   }
+  .record {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
   .score {
     display: inline-block;
     min-width: 1.4em;
@@ -277,6 +282,12 @@ function logoUrl(side) {
   return id ? `https://www.mlbstatic.com/team-logos/${id}.svg` : "";
 }
 
+function recordTag(side) {
+  const r = side.leagueRecord;
+  if (!r || typeof r.wins !== "number" || typeof r.losses !== "number") return "";
+  return `<span class="record">(${r.wins}-${r.losses})</span>`;
+}
+
 function scoreTag(side, hasScore) {
   if (!hasScore) return "";
   const winner = side.isWinner === true ? " win" : "";
@@ -319,7 +330,7 @@ function renderGames(key, games) {
             <span class="away-label">Away</span>
             <span class="team-name">
               <img class="logo" src="${logoUrl(away)}" alt="" loading="lazy" />
-              <span>${away.team.name}</span>${scoreTag(away, hasScore)}
+              <span>${away.team.name}</span>${recordTag(away)}${scoreTag(away, hasScore)}
             </span>
             <span class="pitcher">P: <b>${pitcherName(away)}</b></span>
           </div>
@@ -328,7 +339,7 @@ function renderGames(key, games) {
             <span class="badge">🏠 Home</span>
             <span class="team-name">
               <img class="logo" src="${logoUrl(home)}" alt="" loading="lazy" />
-              <span>${home.team.name}</span>${scoreTag(home, hasScore)}
+              <span>${home.team.name}</span>${recordTag(home)}${scoreTag(home, hasScore)}
             </span>
             <span class="pitcher">P: <b>${pitcherName(home)}</b></span>
           </div>
